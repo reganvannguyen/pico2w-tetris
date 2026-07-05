@@ -1,0 +1,12 @@
+Game
+- owns the main game state
+- owns the current piece
+- owns the next-piece queue
+- handles falling timing
+- handles collision checks for whole pieces
+- decides when pieces lock
+- spawns new pieces
+- handles score
+- handles level
+- handles game over
+- talks to Board, Input, UI, and HighScoreStorage
