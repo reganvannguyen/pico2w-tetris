@@ -22,6 +22,8 @@ public:
     static const unsigned long LOCK_DELAY_MS = 500;
     static const int MAX_LOCK_RESETS = 15;
 
+    void reset();
+    void offset_lock_delay(unsigned long paused_duration);
     void set_fall_timing();
     bool can_move_down(const Piece& piece, int board[20][10]);
     bool can_move_left(const Piece& piece, int board[20][10]);
