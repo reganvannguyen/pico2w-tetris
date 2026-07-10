@@ -15,7 +15,7 @@ public:
     void drawBoard(Board& board);
     void drawPiece(Piece& piece);
     void drawGame(Board& board, Game& game);
-    void drawCell(int row, int col, uint16_t color);
+    void drawCell(int row, int col, uint16_t fillColor, uint16_t outlineColor);
     void clearScreen();
     void drawGameOver(Game& game);
 
