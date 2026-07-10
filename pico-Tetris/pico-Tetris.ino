@@ -81,7 +81,7 @@ void setup() {
   //serial.begin(9600);
   std::srand(millis());
 
-  game.add_piece_board(board.board);
+  game.add_piece_board(board.grid);
 
 
 
@@ -96,42 +96,49 @@ void loop() {
   }
   
   if (millis() - lastFallTime >= fallDelay) {
-      game.down(game.current_piece, board.board); 
+      game.down(game.current_piece, board.grid);
       lastFallTime = millis();
   }
     
   if (millis() - lastInputTime >= inputDelay) {
     if(digitalRead(joystick[4]) == LOW ){ // center
-      game.rotate(game.current_piece, board.board);
+      if (game.rotate(game.current_piece, board.grid)) {
+        game.register_lock_delay_movement(millis());
+      }
       lastInputTime = millis();
     }
     else if(digitalRead(joystick[0]) == LOW ){ // up
-      game.down(game.current_piece, board.board);
+      game.down(game.current_piece, board.grid);
       lastInputTime = millis();
     }
     else if(digitalRead(joystick[1]) == LOW ){ // right
-      game.right(game.current_piece, board.board);
+      if (game.right(game.current_piece, board.grid)) {
+        game.register_lock_delay_movement(millis());
+      }
       lastInputTime = millis();
     }
     else if(digitalRead(joystick[2]) == LOW ){ // down
-      game.down(game.current_piece, board.board);
+      game.down(game.current_piece, board.grid);
       lastInputTime = millis();
     }
     else if(digitalRead(joystick[3]) == LOW ){ // left
-      game.left(game.current_piece, board.board);
+      if (game.left(game.current_piece, board.grid)) {
+        game.register_lock_delay_movement(millis());
+      }
       lastInputTime = millis();
     }
     else if(digitalRead(keys[0]) == LOW){ // a rotate
-      game.rotate(game.current_piece, board.board);
+      if (game.rotate(game.current_piece, board.grid)) {
+        game.register_lock_delay_movement(millis());
+      }
       lastInputTime = millis();
     }
   }
 
-  game.decide_when_to_lock_piece(game.current_piece, board);
+  game.decide_when_to_lock_piece(game.current_piece, board, millis());
 
   fallDelay =  500UL - ((game.level - 1) * 75UL);
 
   ui.drawGame(board, game);
 }
-
 

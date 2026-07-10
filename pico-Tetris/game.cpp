@@ -22,7 +22,7 @@
             return false;
           }
 
-          if(board[piece_location_y][piece_location_x] == 1){ //checks on the board to see if there is a colision.
+          if(board[piece_location_y][piece_location_x] != 0){ //checks on the board to see if there is a colision.
             return false;
           }
         }
@@ -46,7 +46,7 @@
             return false;
           }
 
-          if(board[piece_location_y][piece_location_x] == 1){ //checks on the board to see if there is a colision.
+          if(board[piece_location_y][piece_location_x] != 0){ //checks on the board to see if there is a colision.
             return false;
           }
         }
@@ -71,7 +71,7 @@
             return false;
           }
 
-          if(board[piece_location_y][piece_location_x] == 1){ //checks on the board to see if there is a colision.
+          if(board[piece_location_y][piece_location_x] != 0){ //checks on the board to see if there is a colision.
             return false;
           }
         }
@@ -109,7 +109,7 @@
               return false;
             }
             
-            if(board[piece_location_y][piece_location_x] == 1){ //checks on the board to see if there is a colision.
+            if(board[piece_location_y][piece_location_x] != 0){ //checks on the board to see if there is a colision.
               return false;
             }
           }
@@ -125,20 +125,24 @@
     }
   }
 
-  void Game::left(Piece& piece, int board[20][10]){
+  bool Game::left(Piece& piece, int board[20][10]){
     if(can_move_left(piece, board) == true){
         piece.x--;
+        return true;
     }
+    return false;
   }
 
-  void Game::right(Piece& piece, int board[20][10]){
+  bool Game::right(Piece& piece, int board[20][10]){
     if(can_move_right(piece, board) == true){
         piece.x++;
+        return true;
     }
+    return false;
   }
 
 
-  void Game::rotate(Piece& piece, int board[20][10]){ 
+  bool Game::rotate(Piece& piece, int board[20][10]){
     if(can_rotate(piece, board)== true){
       for (int i = 0; i < 4; i++) {
           for (int j = i + 1; j < 4; j++) {
@@ -149,16 +153,37 @@
       for (int i = 0; i < 4; i++) {
           std::reverse(piece.shape[i], piece.shape[i] + 4);
       }
-
+      return true;
     }
-    
-
-
+    return false;
 }
 
+ void Game::reset_lock_delay() {
+    lock_delay_active = false;
+    lock_delay_started_at = 0;
+    lock_reset_count = 0;
+ }
 
- void Game::decide_when_to_lock_piece(Piece& piece, Board& board) {
-    if (!can_move_down(piece, board.board)) {
+ void Game::register_lock_delay_movement(unsigned long now) {
+    if (lock_delay_active && lock_reset_count < MAX_LOCK_RESETS) {
+        lock_delay_started_at = now;
+        lock_reset_count++;
+    }
+ }
+
+ void Game::decide_when_to_lock_piece(Piece& piece, Board& board, unsigned long now) {
+    if (can_move_down(piece, board.grid)) {
+        reset_lock_delay();
+        return;
+    }
+
+    if (!lock_delay_active) {
+        lock_delay_active = true;
+        lock_delay_started_at = now;
+        return;
+    }
+
+    if (now - lock_delay_started_at >= LOCK_DELAY_MS) {
         board.lock_piece(piece);
 
         int lines = board.clear_full_lines();
@@ -169,7 +194,8 @@
             set_level();
         }
 
-        add_piece_board(board.board);
+        add_piece_board(board.grid);
+        reset_lock_delay();
     }
 }
 
@@ -214,7 +240,7 @@
                   int boardY = piece.y + i;
 
                   if (boardY >= 0 && boardY < 20 && boardX >= 0 && boardX < 10) {
-                      if (board[boardY][boardX] == 1) {
+                      if (board[boardY][boardX] != 0) {
                           return true;
                       }
                   }

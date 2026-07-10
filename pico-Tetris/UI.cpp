@@ -12,14 +12,14 @@ void UI::drawCell(int row, int col, uint16_t color) {
     int y = boardStartY + row * cellSize;
 
     tft.fillRect(x, y, cellSize, cellSize, color);
-    tft.drawRect(x, y, cellSize, cellSize, ST77XX_ORANGE);
+    tft.drawRect(x, y, cellSize, cellSize, ST77XX_WHITE);
 }
 
 void UI::drawBoard(Board& board) {
     for (int row = 0; row < 20; row++) {
         for (int col = 0; col < 10; col++) {
-            if (board.board[row][col] == 1) {
-                drawCell(row, col, ST77XX_WHITE);
+            if (board.grid[row][col] != 0) {
+                drawCell(row, col, static_cast<uint16_t>(board.grid[row][col]));
             } else {
                 drawCell(row, col, ST77XX_BLACK);
             }
@@ -36,7 +36,7 @@ void UI::drawPiece(Piece& piece) {
 
                 if (boardRow >= 0 && boardRow < 20 &&
                     boardCol >= 0 && boardCol < 10) {
-                    drawCell(boardRow, boardCol, ST77XX_CYAN);
+                    drawCell(boardRow, boardCol, piece.color);
                 }
             }
         }

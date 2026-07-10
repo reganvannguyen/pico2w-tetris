@@ -4,7 +4,7 @@ Game
 - owns the next-piece queue
 - handles falling timing
 - handles collision checks for whole pieces
-- decides when pieces lock
+- manages grounded lock delay and decides when pieces lock
 - spawns new pieces
 - handles score
 - handles level
