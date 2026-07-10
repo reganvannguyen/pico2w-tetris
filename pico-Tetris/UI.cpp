@@ -1,10 +1,24 @@
 #include "UI.h"
+#include <stdio.h>
 
 UI::UI(Adafruit_ST7789& display) : tft(display) {
 }
 
 void UI::clearScreen() {
     tft.fillScreen(ST77XX_BLACK);
+}
+
+void UI::drawCenteredText(const char* text, int y, uint8_t textSize, uint16_t color) {
+    int16_t x1;
+    int16_t y1;
+    uint16_t width;
+    uint16_t height;
+
+    tft.setTextSize(textSize);
+    tft.setTextColor(color);
+    tft.getTextBounds(text, 0, y, &x1, &y1, &width, &height);
+    tft.setCursor((240 - width) / 2, y);
+    tft.print(text);
 }
 
 void UI::drawCell(int row, int col, uint16_t fillColor, uint16_t outlineColor) {
@@ -65,25 +79,43 @@ void UI::drawGame(Board& board, Game& game) {
     tft.println(game.line_cleared);
 }
 
+void UI::drawStartScreen() {
+    tft.fillScreen(ST77XX_BLACK);
+
+    tft.setTextColor(ST77XX_ORANGE);
+    tft.setTextSize(3);
+    tft.setCursor(35, 70);
+    tft.println("TETRIS");
+
+    tft.setTextSize(2);
+    tft.setCursor(25, 135);
+    tft.println("Press A to Start");
+}
+
+void UI::drawPaused(Board& board, Game& game) {
+    drawGame(board, game);
+
+    tft.fillRect(0, 80, 240, 80, ST77XX_BLACK);
+    tft.setTextColor(ST77XX_ORANGE);
+    tft.setTextSize(3);
+    tft.setCursor(55, 90);
+    tft.println("PAUSED");
+
+    tft.setTextSize(2);
+    tft.setCursor(25, 130);
+    tft.println("Press Y to Resume");
+}
+
 
 void UI::drawGameOver(Game& game) {
     tft.fillScreen(ST77XX_BLACK);
 
-    tft.setTextColor(ST77XX_RED);
-    tft.setTextSize(2);
-    tft.setCursor(55, 90);
-    tft.println("GAME");
+    char scoreText[32];
+    snprintf(scoreText, sizeof(scoreText), "Score: %d", game.score);
 
-    tft.setCursor(55, 115);
-    tft.println("OVER");
-
-    tft.setCursor(55, 140);
-    tft.print("Score: ");
-    tft.println(game.score);
-
-    tft.setCursor(55, 165);
-    tft.print("level: ");
-    tft.println(game.level);
-     
+    drawCenteredText("GAME OVER", 55, 3, ST77XX_RED);
+    drawCenteredText(scoreText, 105, 2, ST77XX_WHITE);
+    drawCenteredText("A: RETRY", 155, 2, ST77XX_ORANGE);
+    drawCenteredText("B: MENU", 185, 2, ST77XX_ORANGE);
 
 }

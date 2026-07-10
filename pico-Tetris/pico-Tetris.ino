@@ -7,138 +7,171 @@
 #include "board.h"
 #include "UI.h"
 
-
 // Waveshare Pico-LCD-1.3 pin mapping
-#define TFT_DC    8   // GP8  LCD_DC  indicates whether Data or commands writes 
-#define TFT_CS    9   // GP9  LCD_CS  chip select
-#define TFT_SCLK 10   // GP10 LCD_CLK SPI clock input
-#define TFT_MOSI 11   // GP11 LCD_DIN SPI Data input 
-#define TFT_RST  12   // GP12 LCD_RST Reset, low active
-#define TFT_BL   13   // GP13 LCD_BL  Backlight
+#define TFT_DC    8
+#define TFT_CS    9
+#define TFT_SCLK 10
+#define TFT_MOSI 11
+#define TFT_RST  12
+#define TFT_BL   13
 
-int joystick[] = {2, 20, 18, 16, 3};  //up, right, down, left, center
+int joystick[] = {2, 20, 18, 16, 3};  // up, right, down, left, center
+int keys[] = {15, 17, 19, 21};         // a, b, x, y
 
-
-int keys[] = {15,17, 19, 21}; //a, b, x, y
-
-
-// Use software SPI so we can explicitly choose the pins.
-// Constructor order: CS, DC, MOSI, SCLK, RST
-// Adafruit_ST7789 tft = Adafruit_ST7789(
-//   TFT_CS,
-//   TFT_DC,
-//   TFT_MOSI,
-//   TFT_SCLK,
-//   TFT_RST
-// );
-
-Adafruit_ST7789 tft = Adafruit_ST7789(&SPI1, TFT_CS, TFT_DC, TFT_RST); //uses hardware SPI now which is faster
+Adafruit_ST7789 tft = Adafruit_ST7789(&SPI1, TFT_CS, TFT_DC, TFT_RST);
 UI ui(tft);
-
-Board board; //craetion of board
+Board board;
 Game game;
 
-unsigned long lastFallTime = 0;
-unsigned long fallDelay = 800;
+enum GameState {
+  START_SCREEN,
+  PLAYING,
+  PAUSED,
+  GAME_OVER
+};
 
+GameState gameState = START_SCREEN;
+
+unsigned long lastFallTime = 0;
+unsigned long fallDelay = 500;
 unsigned long lastInputTime = 0;
 unsigned long inputDelay = 125;
+unsigned long pauseStartedAt = 0;
 
+bool previousA = false;
+bool previousB = false;
+bool previousY = false;
 
-
+void startNewGame(unsigned long now) {
+  board.clear();
+  game.reset();
+  game.add_piece_board(board.grid);
+  lastFallTime = now;
+  lastInputTime = now;
+  fallDelay = 500;
+  gameState = PLAYING;
+  ui.clearScreen();
+}
 
 void setup() {
-
-  // Turn on backlight
   pinMode(TFT_BL, OUTPUT);
   digitalWrite(TFT_BL, HIGH);
 
-  //telling the adafruit_ST7789 to use these pins as the SCLK and MOSI 
   SPI1.setSCK(TFT_SCLK);
   SPI1.setTX(TFT_MOSI);
-  
-  //initalize joystick
-  for(int i =0; i < sizeof(joystick)/sizeof(joystick[0]); i++){
+
+  for (int i = 0; i < sizeof(joystick) / sizeof(joystick[0]); i++) {
     pinMode(joystick[i], INPUT_PULLUP);
   }
 
-  //initlaize keys
-  for(int i =0; i < sizeof(keys)/sizeof(keys[0]); i++){
+  for (int i = 0; i < sizeof(keys) / sizeof(keys[0]); i++) {
     pinMode(keys[i], INPUT_PULLUP);
   }
 
-
   delay(250);
 
-  // Initialize ST7789 display at 240x240
   tft.init(240, 240);
-  // Try different rotations if the screen is sideways
   tft.setRotation(3);
-  //screen colors
   tft.fillScreen(ST77XX_BLACK);
- 
-//----------------------------------------------------------------------------------------------------------
-  //serial.begin(9600);
+
   std::srand(millis());
-
-  game.add_piece_board(board.grid);
-
-
-
-
+  ui.drawStartScreen();
 }
 
 void loop() {
+  unsigned long now = millis();
+
+  bool aDown = digitalRead(keys[0]) == LOW;
+  bool bDown = digitalRead(keys[1]) == LOW;
+  bool yDown = digitalRead(keys[3]) == LOW;
+  bool aPressed = aDown && !previousA;
+  bool bPressed = bDown && !previousB;
+  bool yPressed = yDown && !previousY;
+
+  previousA = aDown;
+  previousB = bDown;
+  previousY = yDown;
+
+  if (gameState == START_SCREEN) {
+    if (aPressed) {
+      startNewGame(now);
+    }
+    return;
+  }
+
+  if (gameState == GAME_OVER) {
+    if (aPressed) {
+      startNewGame(now);
+    } else if (bPressed) {
+      gameState = START_SCREEN;
+      ui.drawStartScreen();
+    }
+    return;
+  }
+
+  if (gameState == PAUSED) {
+    if (yPressed) {
+      unsigned long pausedDuration = now - pauseStartedAt;
+      game.offset_lock_delay(pausedDuration);
+      lastFallTime += pausedDuration;
+      lastInputTime = now;
+      gameState = PLAYING;
+      ui.clearScreen();
+      ui.drawGame(board, game);
+    }
+    return;
+  }
+
+  if (yPressed) {
+    pauseStartedAt = now;
+    gameState = PAUSED;
+    ui.drawPaused(board, game);
+    return;
+  }
+
+  if (now - lastFallTime >= fallDelay) {
+    game.down(game.current_piece, board.grid);
+    lastFallTime = now;
+  }
+
+  if (now - lastInputTime >= inputDelay) {
+    if (digitalRead(joystick[4]) == LOW) {
+      if (game.rotate(game.current_piece, board.grid)) {
+        game.register_lock_delay_movement(now);
+      }
+      lastInputTime = now;
+    } else if (digitalRead(joystick[0]) == LOW) {
+      game.down(game.current_piece, board.grid);
+      lastInputTime = now;
+    } else if (digitalRead(joystick[1]) == LOW) {
+      if (game.right(game.current_piece, board.grid)) {
+        game.register_lock_delay_movement(now);
+      }
+      lastInputTime = now;
+    } else if (digitalRead(joystick[2]) == LOW) {
+      game.down(game.current_piece, board.grid);
+      lastInputTime = now;
+    } else if (digitalRead(joystick[3]) == LOW) {
+      if (game.left(game.current_piece, board.grid)) {
+        game.register_lock_delay_movement(now);
+      }
+      lastInputTime = now;
+    } else if (aDown) {
+      if (game.rotate(game.current_piece, board.grid)) {
+        game.register_lock_delay_movement(now);
+      }
+      lastInputTime = now;
+    }
+  }
+
+  game.decide_when_to_lock_piece(game.current_piece, board, now);
 
   if (game.is_game_over) {
+    gameState = GAME_OVER;
     ui.drawGameOver(game);
     return;
   }
-  
-  if (millis() - lastFallTime >= fallDelay) {
-      game.down(game.current_piece, board.grid);
-      lastFallTime = millis();
-  }
-    
-  if (millis() - lastInputTime >= inputDelay) {
-    if(digitalRead(joystick[4]) == LOW ){ // center
-      if (game.rotate(game.current_piece, board.grid)) {
-        game.register_lock_delay_movement(millis());
-      }
-      lastInputTime = millis();
-    }
-    else if(digitalRead(joystick[0]) == LOW ){ // up
-      game.down(game.current_piece, board.grid);
-      lastInputTime = millis();
-    }
-    else if(digitalRead(joystick[1]) == LOW ){ // right
-      if (game.right(game.current_piece, board.grid)) {
-        game.register_lock_delay_movement(millis());
-      }
-      lastInputTime = millis();
-    }
-    else if(digitalRead(joystick[2]) == LOW ){ // down
-      game.down(game.current_piece, board.grid);
-      lastInputTime = millis();
-    }
-    else if(digitalRead(joystick[3]) == LOW ){ // left
-      if (game.left(game.current_piece, board.grid)) {
-        game.register_lock_delay_movement(millis());
-      }
-      lastInputTime = millis();
-    }
-    else if(digitalRead(keys[0]) == LOW){ // a rotate
-      if (game.rotate(game.current_piece, board.grid)) {
-        game.register_lock_delay_movement(millis());
-      }
-      lastInputTime = millis();
-    }
-  }
 
-  game.decide_when_to_lock_piece(game.current_piece, board, millis());
-
-  fallDelay =  500UL - ((game.level - 1) * 75UL);
-
+  fallDelay = 500UL - ((game.level - 1) * 75UL);
   ui.drawGame(board, game);
 }
-

@@ -1,10 +1,12 @@
 Game
 - owns the main game state
+- resets gameplay data for a new game
 - owns the current piece
 - owns the next-piece queue
 - handles falling timing
 - handles collision checks for whole pieces
 - manages grounded lock delay and decides when pieces lock
+- preserves lock-delay timing across pauses
 - spawns new pieces
 - handles score
 - handles level

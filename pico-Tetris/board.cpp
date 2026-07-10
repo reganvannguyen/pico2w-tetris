@@ -1,5 +1,13 @@
 #include "board.h"
 
+void Board::clear() {
+    for (int row = 0; row < 20; row++) {
+        for (int col = 0; col < 10; col++) {
+            grid[row][col] = 0;
+        }
+    }
+}
+
  void Board::lock_piece(Piece& piece) {
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {

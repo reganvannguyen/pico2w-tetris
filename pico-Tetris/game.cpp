@@ -1,5 +1,23 @@
 #include "game.h"
 
+void Game::reset() {
+    std::queue<Piece> empty_queue;
+    q_pieces.swap(empty_queue);
+    fall_timing = 1;
+    score = 0;
+    level = 1;
+    line_cleared = 0;
+    is_game_over = false;
+    current_piece = Piece();
+    reset_lock_delay();
+}
+
+void Game::offset_lock_delay(unsigned long paused_duration) {
+    if (lock_delay_active) {
+        lock_delay_started_at += paused_duration;
+    }
+}
+
 
 
   void Game::set_fall_timing(){
