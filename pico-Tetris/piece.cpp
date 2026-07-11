@@ -1,4 +1,15 @@
 #include "piece.h"
+
+namespace {
+const uint16_t COLOR_BLUE = 0x001F;
+const uint16_t COLOR_GREEN = 0x07E0;
+const uint16_t COLOR_CYAN = 0x07FF;
+const uint16_t COLOR_RED = 0xF800;
+const uint16_t COLOR_MAGENTA = 0xF81F;
+const uint16_t COLOR_ORANGE = 0xFD20;
+const uint16_t COLOR_YELLOW = 0xFFE0;
+}
+
 Piece::Piece() {
     piece_id = 0;   // default piece type
     x = 3;
@@ -17,42 +28,49 @@ Piece::Piece(int id) {
 void Piece::setShapeFromId(){
 
   if(piece_id == 0){ // L shape
-    int temp[4][4] = {{0,0,0,0},
+    color = COLOR_ORANGE;
+    int temp[4][4] = {{0,1,0,0},
                       {0,1,0,0},
-                      {0,1,0,0},
-                      {0,1,1,0}};
+                      {0,1,1,0},
+                      {0,0,0,0}};
     copyShape(temp);
   }else if(piece_id == 1){ //reverse l shape
-    int temp[4][4] = {{0,0,0,0},
+    color = COLOR_BLUE;
+    int temp[4][4] = {{0,0,1,0},
                       {0,0,1,0},
-                      {0,0,1,0},
-                      {0,1,1,0}};
+                      {0,1,1,0},
+                      {0,0,0,0}};
     copyShape(temp);
   }else if(piece_id == 2){ // z shape
-    int temp[4][4] = {{0,0,0,0},
-                      {1,1,0,0},
+    color = COLOR_RED;
+    int temp[4][4] = {{1,1,0,0},
                       {0,1,1,0},
+                      {0,0,0,0},
                       {0,0,0,0}};
     copyShape(temp);
   }else if(piece_id == 3){ // reverse shape
-    int temp[4][4] = {{0,0,0,0},
-                      {0,0,1,1},
+    color = COLOR_GREEN;
+    int temp[4][4] = {{0,0,1,1},
                       {0,1,1,0},
+                      {0,0,0,0},
                       {0,0,0,0}};
     copyShape(temp);
   }else if(piece_id == 4){ // t shape
-    int temp[4][4] = {{0,0,0,0},
-                      {0,1,1,1},
+    color = COLOR_MAGENTA;
+    int temp[4][4] = {{0,1,1,1},
                       {0,0,1,0},
+                      {0,0,0,0},
                       {0,0,0,0}};
     copyShape(temp);
   }else if(piece_id == 5){ // square shapre
-    int temp[4][4] = {{0,0,0,0},
+    color = COLOR_YELLOW;
+    int temp[4][4] = {{0,1,1,0},
                       {0,1,1,0},
-                      {0,1,1,0},
+                      {0,0,0,0},
                       {0,0,0,0}};
     copyShape(temp);
   }else if(piece_id == 6){ // square shapre
+    color = COLOR_CYAN;
     int temp[4][4] = {{0,1,0,0},
                       {0,1,0,0},
                       {0,1,0,0},

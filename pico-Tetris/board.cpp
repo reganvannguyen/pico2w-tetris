@@ -1,5 +1,13 @@
 #include "board.h"
 
+void Board::clear() {
+    for (int row = 0; row < 20; row++) {
+        for (int col = 0; col < 10; col++) {
+            grid[row][col] = 0;
+        }
+    }
+}
+
  void Board::lock_piece(Piece& piece) {
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
@@ -9,7 +17,7 @@
 
                 if (piece_location_y >= 0 && piece_location_y < 20 &&
                     piece_location_x >= 0 && piece_location_x < 10) {
-                    board[piece_location_y][piece_location_x] = 1;
+                    grid[piece_location_y][piece_location_x] = piece.color;
                 }
             }
         }
@@ -20,7 +28,7 @@
   
 bool Board::is_line_full(int row) {
     for (int col = 0; col < 10; col++) {
-        if (board[row][col] == 0) {
+        if (grid[row][col] == 0) {
             return false;
         }
     }
@@ -37,12 +45,12 @@ int Board::clear_full_lines() {
 
             for (int moveRow = row; moveRow > 0; moveRow--) {
                 for (int col = 0; col < 10; col++) {
-                    board[moveRow][col] = board[moveRow - 1][col];
+                    grid[moveRow][col] = grid[moveRow - 1][col];
                 }
             }
 
             for (int col = 0; col < 10; col++) {
-                board[0][col] = 0;
+                grid[0][col] = 0;
             }
 
             row++;

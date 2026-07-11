@@ -1,163 +1,81 @@
 # Pico Tetris
 
-A Tetris clone built for the Raspberry Pi Pico 2 W using an ST7789 TFT display and physical button/joystick input.
+A Tetris clone for the Raspberry Pi Pico 2 W with a 240×240 ST7789 display and physical joystick/button controls.
 
-The goal of this project is to build a small embedded game while learning how to structure game logic, input handling, display rendering, and persistent high score storage on a microcontroller.
+## Screenshots
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/immich-20260710_181604/startScreen-crop.jpg" alt="Pico Tetris start screen with persistent high scores" width="260"><br><strong>Start screen</strong><br>Persistent top-three leaderboard</td>
+    <td align="center"><img src="docs/immich-20260710_181604/gameBoard-crop.jpg" alt="Pico Tetris gameplay board with hold and next piece previews" width="260"><br><strong>Gameplay</strong><br>Colored board, Hold, Next, score, level, and lines</td>
+    <td align="center"><img src="docs/immich-20260710_181604/gameOver-crop.jpg" alt="Pico Tetris game-over screen with retry and menu options" width="260"><br><strong>Game over</strong><br>Final score with retry and menu controls</td>
+  </tr>
+</table>
 
 ## Hardware
 
-Planned hardware:
-
 - Raspberry Pi Pico 2 W
-- ST7789 TFT display
-- Buttons or joystick for input
-- Breadboard and jumper wires
-- Optional: buzzer for sound effects
+- 240×240 ST7789 TFT display
+- Five-direction joystick
+- A, B, X, and Y buttons
+
+The display uses SPI1 with SCLK on GP10, MOSI on GP11, CS on GP9, DC on GP8, reset on GP12, and backlight on GP13.
 
 ## Features
 
-Planned features:
-
-- 20x10 Tetris board
-- 7 standard Tetris pieces
-- Piece movement and rotation
-- Collision detection
-- Piece locking
-- Line clearing
-- Score tracking
-- Level progression
-- Increasing fall speed based on level
-- Next-piece preview
-- Game over detection
-- Persistent high score storage
-- UI rendering on the ST7789 display
+- 20×10 board with a white grid and all seven Tetrominoes in distinct standard colors
+- Random queued pieces with colored active, locked, Hold, and Next-piece rendering
+- Joystick movement, edge-triggered rotation, soft drop, and debounced hard drop
+- Hard-drop distance bonus and immediate locking
+- Once-per-piece Hold with spawn-position and rotation reset
+- Wall, floor, locked-cell, spawn, and rotation collision detection
+- 500 ms lock delay with movement/rotation resets and a reset limit
+- Multi-line clearing, score tracking, level progression, and increasing fall speed
+- Start screen, pause/resume overlay, and interactive game-over retry/menu flow
+- Persistent top-three leaderboard with three-letter initials stored in emulated EEPROM
+- Stored-score validation using a magic value, format version, and checksum
+- Cell-level dirty rendering and cached Score, Level, Lines, Hold, and Next HUD updates
 
 ## Controls
 
-Planned controls:
+| Input | Action |
+| --- | --- |
+| Joystick left/right | Move piece |
+| Joystick down | Soft drop |
+| Joystick up | Hard drop |
+| Joystick center | No action |
+| A | Rotate / confirm initials / start or retry |
+| B | Hold piece / return to menu after game over |
+| Y | Pause or resume |
 
-- Left: move piece left
-- Right: move piece right
-- Down: soft drop
-- Rotate: rotate piece
-- Optional: hard drop
-- Optional: pause
+During initials entry, joystick up/down changes the selected letter and left/right selects a position.
 
 ## Project Structure
 
-The project is planned around a few main classes:
-
 ```text
-main
- ├── Input
- ├── Game
- │    ├── Board
- │    ├── Piece currentPiece
- │    ├── pieceQueue
- │    └── HighScoreStorage
- └── UI / Renderer
+pico-Tetris/
+├── pico-Tetris.ino       Application states, timing, and hardware input
+├── game.*                Tetris rules and current game state
+├── board.*               Locked-cell grid and line clearing
+├── piece.*               Tetromino shape, position, and color
+├── UI.*                  ST7789 screens and optimized rendering
+└── highScoreStorage.*    Top-three EEPROM leaderboard
 ```
 
-### Game
+The board stores RGB565 colors for locked cells. The active piece remains separate until locking, and the renderer combines both into a cached 20×10 frame. Only cells and HUD panels whose values change are sent to the display.
 
-Controls the main Tetris rules and game state.
+High scores use the Arduino-Pico emulated EEPROM API. Stored data includes a magic value, format version, entry count, and checksum. EEPROM is written only after a player confirms a qualifying score.
 
-Responsibilities:
+## Building
 
-- Track the current falling piece
-- Track the next-piece queue
-- Handle falling timing
-- Handle whole-piece collision checks
-- Decide when pieces lock
-- Spawn new pieces
-- Update score and level
-- Update fall speed
-- Detect game over
+Install the Earle Philhower Arduino-Pico core and the Adafruit GFX and ST7789 libraries, then select **Raspberry Pi Pico 2W** and compile `pico-Tetris/pico-Tetris.ino`.
 
-### Board
+With Arduino CLI:
 
-Stores the locked blocks in a 20x10 grid.
-
-Responsibilities:
-
-- Store the board array
-- Check if cells are empty or filled
-- Check if cells are inside the board
-- Place locked pieces into the board
-- Clear full lines
-- Shift rows downward
-
-### Piece
-
-Represents the active falling piece.
-
-Responsibilities:
-
-- Store piece type
-- Store rotation state
-- Store x position
-- Store y position
-
-The 7 pieces and their rotations will be stored using 4x4 shape layouts.
-
-### Input
-
-Handles reading the physical controls.
-
-Responsibilities:
-
-- Read button or joystick pins
-- Track which controls are pressed
-- Keep hardware input code separate from game logic
-
-### UI / Renderer
-
-Handles drawing to the ST7789 display.
-
-Responsibilities:
-
-- Draw the board
-- Draw the current falling piece
-- Draw next-piece preview
-- Draw score and level
-- Draw high score
-- Draw game over screen
-
-### HighScoreStorage
-
-Handles saving and loading the high score.
-
-Responsibilities:
-
-- Load the saved high score when the game starts
-- Save a new high score when the game ends
-- Keep storage details separate from game logic
-
-## Game Design
-
-The board stores only locked pieces. The currently falling piece is tracked separately.
-
-```text
-Board = settled blocks
-Current piece = moving block
-Screen = board + current piece
+```sh
+arduino-cli compile --fqbn rp2040:rp2040:rpipico2w pico-Tetris
 ```
-
-When a piece can no longer move down, the game locks it into the board, clears any full lines, updates the score, and spawns the next piece.
-
-The level increases based on the total number of cleared lines. As the level increases, the fall interval decreases, making pieces fall faster.
 
 ## Learning Goals
 
-This project is meant to practice:
-
-- Embedded C++ programming
-- Working with microcontroller input
-- Drawing graphics on a TFT display
-- Game loop design
-- Class-based code organization
-- State management
-- Collision detection
-- Timing without blocking delays
-- Persistent storage on embedded hardware
-- Building a complete small game from scratch
+This project demonstrates embedded C++, non-blocking timing, physical input handling, game-state design, TFT rendering, flash-backed persistence, and separation of game rules from hardware-specific code.

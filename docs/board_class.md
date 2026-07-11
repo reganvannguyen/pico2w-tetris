@@ -1,6 +1,7 @@
 Board
-- owns the 20x10 array
-- stores locked pieces
+- owns the 20x10 grid
+- stores locked piece colors
+- clears the grid for a new game
 - checks if cells are empty or filled
 - checks if a cell is inside the board
 - places locked pieces into the board

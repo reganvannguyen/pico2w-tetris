@@ -1,4 +1,5 @@
 Input
 - reads button/joystick pins
-- remembers which controls are pressed
-- tells the Game things like left, right, rotate, down, pause
+- edge-detects one-shot controls and debounces hard drop
+- maps joystick directions and A/B/Y buttons to gameplay or screen actions
+- leaves the joystick center unassigned

@@ -1,12 +1,17 @@
 Game
-- owns the main game state
+- owns the current Tetris run state
+- resets gameplay data for a new game
 - owns the current piece
 - owns the next-piece queue
+- exposes the next piece for the UI preview
+- manages hard drop scoring and immediate locking
+- manages a once-per-turn held piece
 - handles falling timing
 - handles collision checks for whole pieces
-- decides when pieces lock
+- manages grounded lock delay and decides when pieces lock
+- preserves lock-delay timing across pauses
 - spawns new pieces
 - handles score
 - handles level
 - handles game over
-- talks to Board, Input, UI, and HighScoreStorage
+- talks to Board and Piece; the sketch coordinates input, UI, and persistence

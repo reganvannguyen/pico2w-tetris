@@ -1,8 +1,12 @@
 UI / Renderer
 - draws the board
+- caches the composite board and redraws only changed cells
 - draws the current falling piece
-- draws next-piece preview
+- draws the held and next-piece previews
+- draws the start and paused screens
 - draws score
 - draws level
 - draws high score
+- draws three-letter high-score name entry
+- caches HUD values and redraws only changed panels
 - draws game over screen
