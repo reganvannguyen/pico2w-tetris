@@ -6,6 +6,7 @@
 #include "game.h"
 #include "board.h"
 #include "UI.h"
+#include "highScoreStorage.h"
 
 // Waveshare Pico-LCD-1.3 pin mapping
 #define TFT_DC    8
@@ -22,11 +23,13 @@ Adafruit_ST7789 tft = Adafruit_ST7789(&SPI1, TFT_CS, TFT_DC, TFT_RST);
 UI ui(tft);
 Board board;
 Game game;
+HighScoreStorage highScores;
 
 enum GameState {
   START_SCREEN,
   PLAYING,
   PAUSED,
+  NAME_ENTRY,
   GAME_OVER
 };
 
@@ -43,6 +46,27 @@ bool previousB = false;
 bool previousY = false;
 bool previousUp = false;
 bool previousCenter = false;
+bool previousRight = false;
+bool previousDown = false;
+bool previousLeft = false;
+
+char initials[4] = {'A', 'A', 'A', '\0'};
+int selectedInitial = 0;
+
+void showGameOverOrNameEntry() {
+  ui.invalidateGameFrame();
+  if (highScores.qualifies(game.score)) {
+    initials[0] = 'A';
+    initials[1] = 'A';
+    initials[2] = 'A';
+    selectedInitial = 0;
+    gameState = NAME_ENTRY;
+    ui.drawNameEntry(initials, selectedInitial, game.score);
+  } else {
+    gameState = GAME_OVER;
+    ui.drawGameOver(game);
+  }
+}
 
 void startNewGame(unsigned long now) {
   board.clear();
@@ -52,7 +76,7 @@ void startNewGame(unsigned long now) {
   lastInputTime = now;
   fallDelay = 500;
   gameState = PLAYING;
-  ui.clearScreen();
+  ui.invalidateGameFrame();
 }
 
 void setup() {
@@ -77,7 +101,8 @@ void setup() {
   tft.fillScreen(ST77XX_BLACK);
 
   std::srand(millis());
-  ui.drawStartScreen();
+  highScores.begin();
+  ui.drawStartScreen(highScores);
 }
 
 void loop() {
@@ -88,17 +113,26 @@ void loop() {
   bool yDown = digitalRead(keys[3]) == LOW;
   bool upDown = digitalRead(joystick[0]) == LOW;
   bool centerDown = digitalRead(joystick[4]) == LOW;
+  bool rightDown = digitalRead(joystick[1]) == LOW;
+  bool downDown = digitalRead(joystick[2]) == LOW;
+  bool leftDown = digitalRead(joystick[3]) == LOW;
   bool aPressed = aDown && !previousA;
   bool bPressed = bDown && !previousB;
   bool yPressed = yDown && !previousY;
   bool upPressed = upDown && !previousUp;
   bool centerPressed = centerDown && !previousCenter;
+  bool rightPressed = rightDown && !previousRight;
+  bool downPressed = downDown && !previousDown;
+  bool leftPressed = leftDown && !previousLeft;
 
   previousA = aDown;
   previousB = bDown;
   previousY = yDown;
   previousUp = upDown;
   previousCenter = centerDown;
+  previousRight = rightDown;
+  previousDown = downDown;
+  previousLeft = leftDown;
 
   if (gameState == START_SCREEN) {
     if (aPressed) {
@@ -112,7 +146,38 @@ void loop() {
       startNewGame(now);
     } else if (bPressed) {
       gameState = START_SCREEN;
-      ui.drawStartScreen();
+      ui.invalidateGameFrame();
+      ui.drawStartScreen(highScores);
+    }
+    return;
+  }
+
+  if (gameState == NAME_ENTRY) {
+    bool changed = false;
+    if (upPressed) {
+      initials[selectedInitial] = initials[selectedInitial] == 'Z'
+          ? 'A' : initials[selectedInitial] + 1;
+      changed = true;
+    } else if (downPressed) {
+      initials[selectedInitial] = initials[selectedInitial] == 'A'
+          ? 'Z' : initials[selectedInitial] - 1;
+      changed = true;
+    } else if (leftPressed) {
+      selectedInitial = (selectedInitial + 2) % 3;
+      changed = true;
+    } else if (rightPressed) {
+      selectedInitial = (selectedInitial + 1) % 3;
+      changed = true;
+    } else if (aPressed) {
+      highScores.insert(initials, game.score);
+      highScores.save();
+      gameState = GAME_OVER;
+      ui.drawGameOver(game);
+      return;
+    }
+
+    if (changed) {
+      ui.drawNameEntry(initials, selectedInitial, game.score);
     }
     return;
   }
@@ -124,7 +189,7 @@ void loop() {
       lastFallTime += pausedDuration;
       lastInputTime = now;
       gameState = PLAYING;
-      ui.clearScreen();
+      ui.invalidateGameFrame();
       ui.drawGame(board, game);
     }
     return;
@@ -143,8 +208,7 @@ void loop() {
     lastInputTime = now;
 
     if (game.is_game_over) {
-      gameState = GAME_OVER;
-      ui.drawGameOver(game);
+      showGameOverOrNameEntry();
     } else {
       ui.drawGame(board, game);
     }
@@ -158,8 +222,7 @@ void loop() {
     }
 
     if (game.is_game_over) {
-      gameState = GAME_OVER;
-      ui.drawGameOver(game);
+      showGameOverOrNameEntry();
     } else {
       ui.drawGame(board, game);
     }
@@ -172,20 +235,20 @@ void loop() {
   }
 
   if (now - lastInputTime >= inputDelay) {
-    if (digitalRead(joystick[1]) == LOW) {
+    if (rightDown) {
       if (game.right(game.current_piece, board.grid)) {
         game.register_lock_delay_movement(now);
       }
       lastInputTime = now;
-    } else if (digitalRead(joystick[2]) == LOW) {
+    } else if (downDown) {
       game.down(game.current_piece, board.grid);
       lastInputTime = now;
-    } else if (digitalRead(joystick[3]) == LOW) {
+    } else if (leftDown) {
       if (game.left(game.current_piece, board.grid)) {
         game.register_lock_delay_movement(now);
       }
       lastInputTime = now;
-    } else if (aDown) {
+    } else if (aPressed) {
       if (game.rotate(game.current_piece, board.grid)) {
         game.register_lock_delay_movement(now);
       }
@@ -196,8 +259,7 @@ void loop() {
   game.decide_when_to_lock_piece(game.current_piece, board, now);
 
   if (game.is_game_over) {
-    gameState = GAME_OVER;
-    ui.drawGameOver(game);
+    showGameOverOrNameEntry();
     return;
   }
 
