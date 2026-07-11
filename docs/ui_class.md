@@ -1,6 +1,7 @@
 UI / Renderer
 - draws the board
 - draws the current falling piece
+- draws the held and next-piece previews
 - draws the start and paused screens
 - draws next-piece preview
 - draws score

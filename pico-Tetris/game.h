@@ -18,6 +18,9 @@ public:
     int line_cleared = 0;
     bool is_game_over = false;
     Piece current_piece;
+    Piece held_piece;
+    bool has_held_piece = false;
+    bool hold_used_this_turn = false;
 
     static const unsigned long LOCK_DELAY_MS = 500;
     static const int MAX_LOCK_RESETS = 15;
@@ -34,12 +37,15 @@ public:
     bool left(Piece& piece, int board[20][10]);
     bool right(Piece& piece, int board[20][10]);
     bool rotate(Piece& piece, int board[20][10]);
+    int hard_drop(Board& board);
+    bool hold_current_piece(Board& board);
+    const Piece* next_piece() const;
 
     void register_lock_delay_movement(unsigned long now);
     void decide_when_to_lock_piece(Piece& piece, Board& board, unsigned long now);
 
     void create_piece();
-    void add_piece_board(int board[20][10]);
+    void add_piece_board(int board[20][10], bool reset_hold = true);
     void set_score(int scr);
     void set_level();
     bool game_over(const Piece& piece, int board[20][10]);
@@ -49,6 +55,7 @@ private:
     unsigned long lock_delay_started_at = 0;
     int lock_reset_count = 0;
     void reset_lock_delay();
+    void lock_current_piece(Board& board);
 };
 
 #endif

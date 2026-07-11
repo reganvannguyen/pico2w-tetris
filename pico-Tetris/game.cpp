@@ -9,6 +9,9 @@ void Game::reset() {
     line_cleared = 0;
     is_game_over = false;
     current_piece = Piece();
+    held_piece = Piece();
+    has_held_piece = false;
+    hold_used_this_turn = false;
     reset_lock_delay();
 }
 
@@ -176,6 +179,50 @@ void Game::offset_lock_delay(unsigned long paused_duration) {
     return false;
 }
 
+ int Game::hard_drop(Board& board) {
+    int distance = 0;
+    while (can_move_down(current_piece, board.grid)) {
+        current_piece.y++;
+        distance++;
+    }
+
+    score += distance * 2;
+    lock_current_piece(board);
+    return distance;
+ }
+
+ bool Game::hold_current_piece(Board& board) {
+    if (hold_used_this_turn || is_game_over) {
+        return false;
+    }
+
+    int outgoing_piece_id = current_piece.piece_id;
+    hold_used_this_turn = true;
+    reset_lock_delay();
+
+    if (!has_held_piece) {
+        held_piece = Piece(outgoing_piece_id);
+        has_held_piece = true;
+        add_piece_board(board.grid, false);
+    } else {
+        int incoming_piece_id = held_piece.piece_id;
+        held_piece = Piece(outgoing_piece_id);
+        current_piece = Piece(incoming_piece_id);
+        if (game_over(current_piece, board.grid)) {
+            is_game_over = true;
+        }
+    }
+
+    return true;
+ }
+
+ const Piece* Game::next_piece() const {
+    if (q_pieces.empty()) {
+        return 0;
+    }
+    return &q_pieces.front();
+ }
+
  void Game::reset_lock_delay() {
     lock_delay_active = false;
     lock_delay_started_at = 0;
@@ -202,33 +249,40 @@ void Game::offset_lock_delay(unsigned long paused_duration) {
     }
 
     if (now - lock_delay_started_at >= LOCK_DELAY_MS) {
-        board.lock_piece(piece);
-
-        int lines = board.clear_full_lines();
-
-        if (lines > 0) {
-            line_cleared += lines;
-            set_score(lines);
-            set_level();
-        }
-
-        add_piece_board(board.grid);
-        reset_lock_delay();
+        lock_current_piece(board);
     }
 }
+
+ void Game::lock_current_piece(Board& board) {
+    board.lock_piece(current_piece);
+
+    int lines = board.clear_full_lines();
+    if (lines > 0) {
+        line_cleared += lines;
+        set_score(lines);
+        set_level();
+    }
+
+    add_piece_board(board.grid, true);
+    reset_lock_delay();
+ }
 
   void Game::create_piece() {
     int piece_type = std::rand() % 7; // gives 0 to 6
     q_pieces.emplace(piece_type);
   }
 
- void Game::add_piece_board(int board[20][10]) {
+ void Game::add_piece_board(int board[20][10], bool reset_hold) {
     if (q_pieces.empty()) {
         create_piece();
     }
 
     current_piece = q_pieces.front();
     q_pieces.pop();
+
+    if (reset_hold) {
+        hold_used_this_turn = false;
+    }
 
     if (game_over(current_piece, board)) {
         is_game_over = true;

@@ -41,6 +41,8 @@ unsigned long pauseStartedAt = 0;
 bool previousA = false;
 bool previousB = false;
 bool previousY = false;
+bool previousUp = false;
+bool previousCenter = false;
 
 void startNewGame(unsigned long now) {
   board.clear();
@@ -84,13 +86,19 @@ void loop() {
   bool aDown = digitalRead(keys[0]) == LOW;
   bool bDown = digitalRead(keys[1]) == LOW;
   bool yDown = digitalRead(keys[3]) == LOW;
+  bool upDown = digitalRead(joystick[0]) == LOW;
+  bool centerDown = digitalRead(joystick[4]) == LOW;
   bool aPressed = aDown && !previousA;
   bool bPressed = bDown && !previousB;
   bool yPressed = yDown && !previousY;
+  bool upPressed = upDown && !previousUp;
+  bool centerPressed = centerDown && !previousCenter;
 
   previousA = aDown;
   previousB = bDown;
   previousY = yDown;
+  previousUp = upDown;
+  previousCenter = centerDown;
 
   if (gameState == START_SCREEN) {
     if (aPressed) {
@@ -129,21 +137,42 @@ void loop() {
     return;
   }
 
+  if (upPressed) {
+    game.hard_drop(board);
+    lastFallTime = now;
+    lastInputTime = now;
+
+    if (game.is_game_over) {
+      gameState = GAME_OVER;
+      ui.drawGameOver(game);
+    } else {
+      ui.drawGame(board, game);
+    }
+    return;
+  }
+
+  if (centerPressed) {
+    if (game.hold_current_piece(board)) {
+      lastFallTime = now;
+      lastInputTime = now;
+    }
+
+    if (game.is_game_over) {
+      gameState = GAME_OVER;
+      ui.drawGameOver(game);
+    } else {
+      ui.drawGame(board, game);
+    }
+    return;
+  }
+
   if (now - lastFallTime >= fallDelay) {
     game.down(game.current_piece, board.grid);
     lastFallTime = now;
   }
 
   if (now - lastInputTime >= inputDelay) {
-    if (digitalRead(joystick[4]) == LOW) {
-      if (game.rotate(game.current_piece, board.grid)) {
-        game.register_lock_delay_movement(now);
-      }
-      lastInputTime = now;
-    } else if (digitalRead(joystick[0]) == LOW) {
-      game.down(game.current_piece, board.grid);
-      lastInputTime = now;
-    } else if (digitalRead(joystick[1]) == LOW) {
+    if (digitalRead(joystick[1]) == LOW) {
       if (game.right(game.current_piece, board.grid)) {
         game.register_lock_delay_movement(now);
       }
