@@ -2,6 +2,16 @@
 
 A Tetris clone for the Raspberry Pi Pico 2 W with a 240×240 ST7789 display and physical joystick/button controls.
 
+## Screenshots
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/immich-20260710_181604/startScreen-crop.jpg" alt="Pico Tetris start screen with persistent high scores" width="260"><br><strong>Start screen</strong><br>Persistent top-three leaderboard</td>
+    <td align="center"><img src="docs/immich-20260710_181604/gameBoard-crop.jpg" alt="Pico Tetris gameplay board with hold and next piece previews" width="260"><br><strong>Gameplay</strong><br>Colored board, Hold, Next, score, level, and lines</td>
+    <td align="center"><img src="docs/immich-20260710_181604/gameOver-crop.jpg" alt="Pico Tetris game-over screen with retry and menu options" width="260"><br><strong>Game over</strong><br>Final score with retry and menu controls</td>
+  </tr>
+</table>
+
 ## Hardware
 
 - Raspberry Pi Pico 2 W
@@ -13,12 +23,18 @@ The display uses SPI1 with SCLK on GP10, MOSI on GP11, CS on GP9, DC on GP8, res
 
 ## Features
 
-- 20×10 board and all seven Tetrominoes in standard colors
-- Movement, rotation, soft drop, hard drop, hold, and next-piece preview
-- Collision detection, 500 ms lock delay, line clearing, scoring, and level progression
-- Start, pause, and interactive game-over screens
-- Persistent top-three leaderboard with three-letter initials in emulated EEPROM
-- Cell-level dirty rendering and cached HUD updates to reduce display flicker
+- 20×10 board with a white grid and all seven Tetrominoes in distinct standard colors
+- Random queued pieces with colored active, locked, Hold, and Next-piece rendering
+- Joystick movement, edge-triggered rotation, soft drop, and debounced hard drop
+- Hard-drop distance bonus and immediate locking
+- Once-per-piece Hold with spawn-position and rotation reset
+- Wall, floor, locked-cell, spawn, and rotation collision detection
+- 500 ms lock delay with movement/rotation resets and a reset limit
+- Multi-line clearing, score tracking, level progression, and increasing fall speed
+- Start screen, pause/resume overlay, and interactive game-over retry/menu flow
+- Persistent top-three leaderboard with three-letter initials stored in emulated EEPROM
+- Stored-score validation using a magic value, format version, and checksum
+- Cell-level dirty rendering and cached Score, Level, Lines, Hold, and Next HUD updates
 
 ## Controls
 
