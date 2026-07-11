@@ -1,5 +1,5 @@
 Game
-- owns the main game state
+- owns the current Tetris run state
 - resets gameplay data for a new game
 - owns the current piece
 - owns the next-piece queue
@@ -14,4 +14,4 @@ Game
 - handles score
 - handles level
 - handles game over
-- talks to Board, Input, UI, and HighScoreStorage
+- talks to Board and Piece; the sketch coordinates input, UI, and persistence
