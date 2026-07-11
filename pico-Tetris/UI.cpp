@@ -1,4 +1,5 @@
 #include "UI.h"
+#include <algorithm>
 #include <stdio.h>
 
 UI::UI(Adafruit_ST7789& display) : tft(display) {
@@ -58,38 +59,91 @@ void UI::drawPiece(Piece& piece) {
     }
 }
 
+void UI::drawPreview(const Piece& piece, int areaX, int areaY, int areaWidth, int areaHeight) {
+    const int previewCellSize = 8;
+    int minRow = 4;
+    int maxRow = -1;
+    int minCol = 4;
+    int maxCol = -1;
+
+    for (int row = 0; row < 4; row++) {
+        for (int col = 0; col < 4; col++) {
+            if (piece.shape[row][col] == 1) {
+                minRow = std::min(minRow, row);
+                maxRow = std::max(maxRow, row);
+                minCol = std::min(minCol, col);
+                maxCol = std::max(maxCol, col);
+            }
+        }
+    }
+
+    if (maxRow < 0 || maxCol < 0) {
+        return;
+    }
+
+    int pieceWidth = (maxCol - minCol + 1) * previewCellSize;
+    int pieceHeight = (maxRow - minRow + 1) * previewCellSize;
+    int startX = areaX + (areaWidth - pieceWidth) / 2;
+    int startY = areaY + (areaHeight - pieceHeight) / 2;
+
+    for (int row = minRow; row <= maxRow; row++) {
+        for (int col = minCol; col <= maxCol; col++) {
+            if (piece.shape[row][col] == 1) {
+                int x = startX + (col - minCol) * previewCellSize;
+                int y = startY + (row - minRow) * previewCellSize;
+                tft.fillRect(x, y, previewCellSize, previewCellSize, piece.color);
+                tft.drawRect(x, y, previewCellSize, previewCellSize, piece.color);
+            }
+        }
+    }
+}
+
 void UI::drawGame(Board& board, Game& game) {
     drawBoard(board);
     drawPiece(game.current_piece);
 
-    tft.fillRect(140, 20, 90, 60, ST77XX_BLACK);
+    tft.fillRect(0, 0, 70, 240, ST77XX_BLACK);
+    tft.fillRect(170, 0, 70, 240, ST77XX_BLACK);
 
-    tft.setCursor(140, 20);
+    tft.setCursor(180, 20);
     tft.setTextColor(ST77XX_WHITE);
     tft.setTextSize(1);
-    tft.print("Score: ");
+    tft.print("Score");
+    tft.setCursor(180, 32);
     tft.println(game.score);
 
-    tft.setCursor(140, 40);
-    tft.print("Level: ");
+    tft.setCursor(180, 50);
+    tft.print("Level");
+    tft.setCursor(180, 62);
     tft.println(game.level);
 
-    tft.setCursor(140, 60);
-    tft.print("Lines: ");
+    tft.setCursor(180, 80);
+    tft.print("Lines");
+    tft.setCursor(180, 92);
     tft.println(game.line_cleared);
+
+    tft.setTextColor(ST77XX_ORANGE);
+    tft.setCursor(15, 20);
+    tft.print("HOLD");
+    tft.drawRect(10, 38, 50, 50, ST77XX_WHITE);
+    if (game.has_held_piece) {
+        drawPreview(game.held_piece, 10, 38, 50, 50);
+    }
+
+    tft.setCursor(188, 115);
+    tft.print("NEXT");
+    tft.drawRect(180, 131, 50, 50, ST77XX_WHITE);
+    const Piece* upcoming = game.next_piece();
+    if (upcoming != 0) {
+        drawPreview(*upcoming, 180, 131, 50, 50);
+    }
 }
 
 void UI::drawStartScreen() {
     tft.fillScreen(ST77XX_BLACK);
 
-    tft.setTextColor(ST77XX_ORANGE);
-    tft.setTextSize(3);
-    tft.setCursor(35, 70);
-    tft.println("TETRIS");
-
-    tft.setTextSize(2);
-    tft.setCursor(25, 135);
-    tft.println("Press A to Start");
+    drawCenteredText("TETRIS", 70, 3, ST77XX_ORANGE);
+    drawCenteredText("Press A to Start", 135, 2, ST77XX_ORANGE);
 }
 
 void UI::drawPaused(Board& board, Game& game) {

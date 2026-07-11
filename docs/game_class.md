@@ -3,6 +3,9 @@ Game
 - resets gameplay data for a new game
 - owns the current piece
 - owns the next-piece queue
+- exposes the next piece for the UI preview
+- manages hard drop scoring and immediate locking
+- manages a once-per-turn held piece
 - handles falling timing
 - handles collision checks for whole pieces
 - manages grounded lock delay and decides when pieces lock

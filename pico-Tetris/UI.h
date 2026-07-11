@@ -25,9 +25,10 @@ private:
     Adafruit_ST7789& tft;
 
     void drawCenteredText(const char* text, int y, uint8_t textSize, uint16_t color);
+    void drawPreview(const Piece& piece, int areaX, int areaY, int areaWidth, int areaHeight);
 
     int cellSize = 10;
-    int boardStartX = 20;
+    int boardStartX = 70;
     int boardStartY = 20;
 };
 
