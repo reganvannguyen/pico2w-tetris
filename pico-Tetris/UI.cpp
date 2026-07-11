@@ -105,21 +105,21 @@ void UI::drawGame(Board& board, Game& game) {
     tft.fillRect(0, 0, 70, 240, ST77XX_BLACK);
     tft.fillRect(170, 0, 70, 240, ST77XX_BLACK);
 
-    tft.setCursor(180, 10);
+    tft.setCursor(180, 20);
     tft.setTextColor(ST77XX_WHITE);
     tft.setTextSize(1);
     tft.print("Score");
-    tft.setCursor(180, 22);
+    tft.setCursor(180, 32);
     tft.println(game.score);
 
-    tft.setCursor(180, 40);
+    tft.setCursor(180, 50);
     tft.print("Level");
-    tft.setCursor(180, 52);
+    tft.setCursor(180, 62);
     tft.println(game.level);
 
-    tft.setCursor(180, 70);
+    tft.setCursor(180, 80);
     tft.print("Lines");
-    tft.setCursor(180, 82);
+    tft.setCursor(180, 92);
     tft.println(game.line_cleared);
 
     tft.setTextColor(ST77XX_ORANGE);
@@ -130,12 +130,12 @@ void UI::drawGame(Board& board, Game& game) {
         drawPreview(game.held_piece, 10, 38, 50, 50);
     }
 
-    tft.setCursor(188, 105);
+    tft.setCursor(188, 115);
     tft.print("NEXT");
-    tft.drawRect(180, 121, 50, 50, ST77XX_WHITE);
+    tft.drawRect(180, 131, 50, 50, ST77XX_WHITE);
     const Piece* upcoming = game.next_piece();
     if (upcoming != 0) {
-        drawPreview(*upcoming, 180, 121, 50, 50);
+        drawPreview(*upcoming, 180, 131, 50, 50);
     }
 }
 

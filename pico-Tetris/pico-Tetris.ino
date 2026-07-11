@@ -137,10 +137,11 @@ void loop() {
     return;
   }
 
-  if (upPressed) {
-    game.hard_drop(board);
-    lastFallTime = now;
-    lastInputTime = now;
+  if (upPressed || bPressed) {
+    if (game.hold_current_piece(board)) {
+      lastFallTime = now;
+      lastInputTime = now;
+    }
 
     if (game.is_game_over) {
       gameState = GAME_OVER;
@@ -152,10 +153,9 @@ void loop() {
   }
 
   if (centerPressed) {
-    if (game.hold_current_piece(board)) {
-      lastFallTime = now;
-      lastInputTime = now;
-    }
+    game.hard_drop(board);
+    lastFallTime = now;
+    lastInputTime = now;
 
     if (game.is_game_over) {
       gameState = GAME_OVER;
