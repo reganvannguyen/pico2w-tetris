@@ -40,6 +40,8 @@ unsigned long fallDelay = 500;
 unsigned long lastInputTime = 0;
 unsigned long inputDelay = 125;
 unsigned long pauseStartedAt = 0;
+unsigned long lastHardDropTime = 0;
+const unsigned long hardDropDebounce = 250;
 
 bool previousA = false;
 bool previousB = false;
@@ -73,6 +75,7 @@ void startNewGame(unsigned long now) {
   game.add_piece_board(board.grid);
   lastFallTime = now;
   lastInputTime = now;
+  lastHardDropTime = now;
   fallDelay = 500;
   gameState = PLAYING;
   ui.invalidateGameFrame();
@@ -198,8 +201,9 @@ void loop() {
     return;
   }
 
-  if (upPressed) {
+  if (upPressed && now - lastHardDropTime >= hardDropDebounce) {
     game.hard_drop(board);
+    lastHardDropTime = now;
     lastFallTime = now;
     lastInputTime = now;
 

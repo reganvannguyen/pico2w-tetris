@@ -29,44 +29,44 @@ void Piece::setShapeFromId(){
 
   if(piece_id == 0){ // L shape
     color = COLOR_ORANGE;
-    int temp[4][4] = {{0,0,0,0},
+    int temp[4][4] = {{0,1,0,0},
                       {0,1,0,0},
-                      {0,1,0,0},
-                      {0,1,1,0}};
+                      {0,1,1,0},
+                      {0,0,0,0}};
     copyShape(temp);
   }else if(piece_id == 1){ //reverse l shape
     color = COLOR_BLUE;
-    int temp[4][4] = {{0,0,0,0},
+    int temp[4][4] = {{0,0,1,0},
                       {0,0,1,0},
-                      {0,0,1,0},
-                      {0,1,1,0}};
+                      {0,1,1,0},
+                      {0,0,0,0}};
     copyShape(temp);
   }else if(piece_id == 2){ // z shape
     color = COLOR_RED;
-    int temp[4][4] = {{0,0,0,0},
-                      {1,1,0,0},
+    int temp[4][4] = {{1,1,0,0},
                       {0,1,1,0},
+                      {0,0,0,0},
                       {0,0,0,0}};
     copyShape(temp);
   }else if(piece_id == 3){ // reverse shape
     color = COLOR_GREEN;
-    int temp[4][4] = {{0,0,0,0},
-                      {0,0,1,1},
+    int temp[4][4] = {{0,0,1,1},
                       {0,1,1,0},
+                      {0,0,0,0},
                       {0,0,0,0}};
     copyShape(temp);
   }else if(piece_id == 4){ // t shape
     color = COLOR_MAGENTA;
-    int temp[4][4] = {{0,0,0,0},
-                      {0,1,1,1},
+    int temp[4][4] = {{0,1,1,1},
                       {0,0,1,0},
+                      {0,0,0,0},
                       {0,0,0,0}};
     copyShape(temp);
   }else if(piece_id == 5){ // square shapre
     color = COLOR_YELLOW;
-    int temp[4][4] = {{0,0,0,0},
+    int temp[4][4] = {{0,1,1,0},
                       {0,1,1,0},
-                      {0,1,1,0},
+                      {0,0,0,0},
                       {0,0,0,0}};
     copyShape(temp);
   }else if(piece_id == 6){ // square shapre
