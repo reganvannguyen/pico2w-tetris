@@ -45,7 +45,6 @@ bool previousA = false;
 bool previousB = false;
 bool previousY = false;
 bool previousUp = false;
-bool previousCenter = false;
 bool previousRight = false;
 bool previousDown = false;
 bool previousLeft = false;
@@ -112,7 +111,6 @@ void loop() {
   bool bDown = digitalRead(keys[1]) == LOW;
   bool yDown = digitalRead(keys[3]) == LOW;
   bool upDown = digitalRead(joystick[0]) == LOW;
-  bool centerDown = digitalRead(joystick[4]) == LOW;
   bool rightDown = digitalRead(joystick[1]) == LOW;
   bool downDown = digitalRead(joystick[2]) == LOW;
   bool leftDown = digitalRead(joystick[3]) == LOW;
@@ -120,7 +118,6 @@ void loop() {
   bool bPressed = bDown && !previousB;
   bool yPressed = yDown && !previousY;
   bool upPressed = upDown && !previousUp;
-  bool centerPressed = centerDown && !previousCenter;
   bool rightPressed = rightDown && !previousRight;
   bool downPressed = downDown && !previousDown;
   bool leftPressed = leftDown && !previousLeft;
@@ -129,7 +126,6 @@ void loop() {
   previousB = bDown;
   previousY = yDown;
   previousUp = upDown;
-  previousCenter = centerDown;
   previousRight = rightDown;
   previousDown = downDown;
   previousLeft = leftDown;
@@ -215,7 +211,7 @@ void loop() {
     return;
   }
 
-  if (centerPressed || bPressed) {
+  if (bPressed) {
     if (game.hold_current_piece(board)) {
       lastFallTime = now;
       lastInputTime = now;
